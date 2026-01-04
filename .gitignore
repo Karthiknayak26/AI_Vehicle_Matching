@@ -33,6 +33,9 @@ wheels/
 .vscode/
 
 # Data files (keep structure, ignore large files)
+# Exception: allow raw data files
+!data/raw/*.csv
+
 *.csv
 *.parquet
 *.pkl
