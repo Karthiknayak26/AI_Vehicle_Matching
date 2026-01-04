@@ -8,7 +8,7 @@
 
 ## 🚀 Project Overview
 
-This project implements an intelligent vehicle matching and dynamic pricing system for ride-hailing platforms. The system predicts accurate trip durations (ETA), estimates regional demand patterns, calculates fair surge pricing, and ranks available vehicles based on user preferences. By combining machine learning models with business logic, the system optimizes both rider experience (minimizing wait times and costs) and driver utilization (maximizing earnings during peak demand). The solution demonstrates end-to-end ML engineering—from synthetic data generation to production-ready API deployment—while maintaining interpretability and real-world applicability.
+This project implements an intelligent vehicle matching and dynamic pricing system for ride-hailing platforms. The system predicts trip durations with 96% accuracy using machine learning, estimates demand across spatial regions and time periods, and provides a foundation for dynamic pricing decisions. By combining geospatial analysis, temporal pattern recognition, and gradient boosting algorithms, the system optimizes both rider experience (accurate ETAs) and platform efficiency (demand-based pricing). The implementation demonstrates production-ready ML engineering practices including feature engineering, model evaluation, and reproducible data pipelines.
 
 ---
 
@@ -16,80 +16,169 @@ This project implements an intelligent vehicle matching and dynamic pricing syst
 
 ### 1. Data Engineering
 
-The foundation of this system is a realistic synthetic dataset of 10,000 ride records spanning 30 days. Rather than relying on expensive third-party APIs or proprietary data, I generated controlled data that captures real-world patterns: a 10km × 10km metro city grid with four high-demand hotspots (business district, airport, shopping area, residential hub), temporal variations including morning rush (7-10 AM) and evening rush (5-8 PM) with traffic multipliers up to 2.0×, and three vehicle categories (Economy, Sedan, SUV) with distinct speed and pricing characteristics. This approach provided complete control over edge cases, ensured reproducibility for testing, and allowed rapid iteration without external dependencies. The data includes mandatory fields (coordinates, timestamps, vehicle type, distance, duration, fare) and derived features (hour, day of week, rush hour flags) that directly support downstream ML models.
+The project uses synthetically generated ride data to simulate realistic ride-hailing scenarios. I created a data generator that produces 10,000 rides over a 30-day period, incorporating:
+
+- **Geospatial realism:** A 10km × 10km metro city grid with four high-demand hotspots (business district, airport, shopping area, residential hub) where 40% of rides originate or terminate
+- **Temporal patterns:** Rush hour simulation with distinct traffic multipliers (1.8× for morning rush, 2.0× for evening rush) and demand variations throughout the day
+- **Vehicle diversity:** Three vehicle categories (Economy, Sedan, SUV) with different base speeds, pricing structures, and fleet distributions matching real-world proportions
+
+Synthetic data was chosen for several practical reasons: it eliminates API costs, ensures complete control over edge cases and distributions, avoids privacy concerns with real customer data, and enables rapid iteration during development. The data includes controlled randomness (±10% duration noise, ±5% fare noise) to simulate real-world variability while maintaining clear underlying patterns for ML models to learn.
 
 ### 2. Predictive Modeling (The "Brain")
 
-**ETA Prediction:**
+#### ETA Prediction
 
-I trained two models to predict trip duration: a Linear Regression baseline and a LightGBM gradient boosting model. The baseline achieved an MAE of 1.53 minutes with R² of 0.88, demonstrating that linear relationships capture much of the pattern. However, LightGBM significantly outperformed with MAE of 0.79 minutes and R² of 0.96—a 48% improvement. This performance gain comes from LightGBM's ability to learn non-linear interactions (e.g., short trips during rush hour are disproportionately slower due to traffic lights) and automatically handle feature importance (distance dominates, followed by vehicle type and hour). The model uses nine engineered features: Haversine distance, hour of day, day of week, rush hour flags (morning/evening/combined), weekend flag, late night flag, and encoded vehicle type. With an average error under one minute, the model provides reliable ETAs that users can trust.
+I implemented and compared two models for trip duration prediction:
 
-**Demand Estimation:**
+**Linear Regression (Baseline):**
+- Achieved MAE of 1.53 minutes and R² of 0.88
+- Serves as a simple, interpretable baseline
+- Assumes linear relationships between features and duration
 
-Instead of complex time-series forecasting, I implemented a pragmatic spatial-temporal aggregation approach. The city is divided into a 5×5 grid (25 regions), and demand is aggregated by region and hour, creating 600 demand slots (25 regions × 24 hours). Each slot receives a normalized demand score (0-1) based on historical ride counts. This approach is sufficient for surge pricing decisions—we don't need to predict exact ride counts, just whether demand is low, medium, or high. The model successfully identified peak hours (12-1 PM, 5-8 PM) and high-demand regions (city center, business district), with 4% of slots qualifying for surge pricing. This balance prevents excessive surging while capturing genuine supply-demand imbalances.
+**LightGBM (Production Model):**
+- Achieved MAE of 0.79 minutes and R² of 0.96
+- Outperforms baseline by 48% on mean absolute error
+- Captures non-linear patterns such as distance-rush hour interactions
+- Uses gradient boosting with 200 trees, learning rate of 0.05, and early stopping to prevent overfitting
+
+LightGBM was selected as the production model because it significantly outperforms the baseline while maintaining fast inference times (< 1ms per prediction). Feature importance analysis confirms that distance is the primary predictor (importance: 1479), followed by vehicle type (639) and hour of day (597), which aligns with domain knowledge and validates the model's learning.
+
+#### Demand Estimation
+
+The demand estimation system uses spatial and temporal aggregation rather than complex forecasting:
+
+- **Spatial binning:** The city is divided into a 5×5 grid creating 25 regions, each approximately 2km × 2km
+- **Temporal bucketing:** Demand is aggregated by hour (24 time periods) rather than minute-level precision
+- **Demand scoring:** Each region-hour combination receives a normalized demand score (0-1) based on ride counts
+
+This approach generates 600 demand slots (25 regions × 24 hours) with clear patterns: peak hours identified at 12-1 PM and 5 PM, high-demand regions concentrated in the city center (region 3_3), and 4% of slots qualifying for surge pricing (demand score ≥ 0.7). The simplicity of this approach makes it robust and interpretable while providing sufficient granularity for pricing decisions.
 
 ### 3. Core Logic (The "Engine")
 
-**Dynamic Pricing:**
+#### Dynamic Pricing (Planned Implementation)
 
-The pricing engine implements demand-responsive surge multipliers based on the demand score. The logic is straightforward: low demand (score < 0.3) applies a 0.9× discount to incentivize rides and utilize idle drivers; medium demand (0.3-0.7) maintains normal 1.0× pricing; high demand (0.7-0.85) applies a 1.3× moderate surge; and very high demand (≥0.85) applies a 1.5× maximum surge. This capped approach prevents price gouging while balancing supply and demand. The base fare calculation follows the formula:
+The dynamic pricing logic will use demand scores to calculate surge multipliers:
 
 ```
-Base Fare = Base Rate + (Distance × Per-KM Rate) + (Duration × Per-Minute Rate)
+Base Fare = $2.50 + (Distance × $1.20/km) + (Duration × $0.30/min)
+
+Surge Multiplier:
+- Low demand (score < 0.3): 0.9× (discount to attract riders)
+- Medium demand (0.3 ≤ score < 0.7): 1.0× (normal pricing)
+- High demand (0.7 ≤ score < 0.85): 1.3× (moderate surge)
+- Very high demand (score ≥ 0.85): 1.5× (high surge)
+
 Final Fare = Base Fare × Surge Multiplier
 ```
 
-For example, a 5 km, 12-minute Economy ride normally costs $12.50, but during high demand (1.3× surge), it becomes $16.25. This transparent pricing helps drivers earn more during peak times while keeping fares reasonable for riders.
+The surge cap at 1.5× prevents excessive pricing that could damage user trust. This balanced approach ensures drivers are incentivized during high demand while keeping prices reasonable for riders. Currently, the demand model and scoring logic are implemented; integration with the pricing API is planned for Day 3-4.
 
-**Vehicle Ranking:**
+#### Vehicle Ranking (Planned Implementation)
 
-The ranking system scores available vehicles using a weighted combination of three factors: ETA to pickup (predicted using our ML model), estimated trip cost (calculated using the pricing formula), and vehicle comfort score (Economy=1, Sedan=2, SUV=3). Users can select their preference mode: Fastest (100% weight on ETA), Cheapest (100% weight on cost), or Balanced (50% ETA, 30% cost, 20% comfort). Each vehicle receives a normalized score (0-100), and the top-k vehicles are returned. For instance, in Fastest mode, a vehicle 3 minutes away scores higher than one 8 minutes away, regardless of price. This flexibility allows the system to adapt to different user priorities while maintaining objective, data-driven rankings.
+The vehicle ranking system will score available vehicles based on multiple factors:
 
-### 4. API Layer
+- **ETA to pickup:** Predicted using the trained LightGBM model
+- **Trip cost:** Calculated using base fare + distance + duration with applicable surge
+- **Vehicle comfort:** Encoded as comfort scores (Economy: 1, Sedan: 2, SUV: 3)
 
-The system exposes a RESTful API built with FastAPI, chosen for its automatic validation, async support, and built-in OpenAPI documentation. The core endpoint `/ride/quote` accepts a ride request (pickup/drop coordinates, vehicle preference, user mode) and returns a ranked list of available vehicles with predicted ETAs, estimated fares, and surge information. The API loads pre-trained models at startup (LightGBM for ETA, demand lookup table for surge), performs feature extraction (Haversine distance, temporal features, vehicle encoding), runs predictions in under 10ms, and returns JSON responses with clear structure. Request validation using Pydantic ensures type safety and prevents invalid inputs. The design prioritizes low latency (critical for real-time user experience) and clean separation of concerns (API layer, business logic, ML models).
+User preference modes will weight these factors differently:
+- **Fastest mode:** Prioritize lowest ETA (70% weight), cost secondary (30% weight)
+- **Cheapest mode:** Prioritize lowest cost (70% weight), ETA secondary (30% weight)
+- **Balanced mode:** Equal weighting (50% ETA, 50% cost)
+
+The top-k vehicles (typically k=3) will be returned to the rider. This implementation is planned for Day 3-4 after API development.
+
+### 4. API Layer (Planned Implementation)
+
+The system will use FastAPI to provide a RESTful interface with the following design:
+
+**Key Endpoints:**
+- `POST /ride/quote`: Returns ETA, fare estimate, and available vehicles for a ride request
+- `POST /vehicles/update`: Updates vehicle locations and availability status
+- `GET /demand/region/{region_id}`: Returns current demand score for a region
+
+**Design Principles:**
+- Request validation using Pydantic models to ensure data integrity
+- Low-latency responses (< 100ms target) by loading models at startup
+- Clean JSON request/response format for easy integration
+- Comprehensive error handling with meaningful status codes
+
+The API layer is currently in planning phase and will be implemented in Day 3-4.
 
 ---
 
 ## 📊 Key Results & Performance
 
-**ETA Model Performance:**
+### ETA Model Performance
 
-The LightGBM model achieved a Mean Absolute Error (MAE) of 0.79 minutes, meaning predictions are off by approximately 47 seconds on average. The Root Mean Squared Error (RMSE) of 1.16 minutes indicates the model handles outliers reasonably well. With an R² score of 0.96, the model explains 96% of the variance in trip duration—only 4% is attributed to unpredictable factors. Feature importance analysis confirms intuitive patterns: distance is the strongest predictor (importance: 1479), followed by vehicle type (639), hour of day (597), and day of week (482). These metrics demonstrate production-ready accuracy that would provide reliable ETAs to end users.
+The LightGBM model demonstrates strong predictive accuracy:
 
-**System Reliability:**
+- **MAE (Mean Absolute Error): 0.79 minutes** – On average, predictions are off by less than 1 minute (47 seconds), which is imperceptible to most users
+- **RMSE (Root Mean Squared Error): 1.16 minutes** – The model handles outliers reasonably well, with RMSE only 47% higher than MAE
+- **R² (Coefficient of Determination): 0.96** – The model explains 96% of variance in trip duration, indicating excellent fit
+- **MAPE (Mean Absolute Percentage Error): 8.83%** – Predictions are within 9% of actual values on average
 
-The system demonstrates strong reliability through comprehensive testing and validation. Train-test split (80-20) with consistent performance across both sets indicates minimal overfitting. The demand model correctly identifies all expected peak hours and high-traffic regions, with demand scores correlating strongly with actual ride counts. Edge case handling includes minimum trip distances (0.5 km), late-night discounts, and surge caps to prevent extreme pricing. All model artifacts (4 .pkl files totaling ~400 KB) are lightweight and load in under 100ms, suitable for serverless deployment.
+These metrics indicate production-ready performance. The model generalizes well to unseen data (minimal gap between training R² of 0.969 and test R² of 0.962), suggesting no significant overfitting.
 
-**API Performance:**
+### System Reliability
 
-The FastAPI implementation achieves sub-10ms prediction latency for single requests, with the majority of time spent on feature extraction rather than model inference. The API handles concurrent requests efficiently through async processing and maintains clean error handling for invalid inputs (out-of-bounds coordinates, unsupported vehicle types). OpenAPI documentation auto-generates interactive API docs, making integration straightforward for frontend developers.
+The implementation follows software engineering best practices:
+
+- **Reproducibility:** Fixed random seed (42) ensures consistent results across runs
+- **Modularity:** Separate modules for features, models, and evaluation enable easy testing and maintenance
+- **Documentation:** Comprehensive docstrings and README files explain all components
+- **Version control:** All code, models, and documentation tracked in Git with clear commit history
+
+### Model Artifacts
+
+All trained models and evaluation results are saved for deployment:
+- 4 model files (.pkl format): Linear Regression, LightGBM, feature scaler, demand model
+- 5 evaluation reports: Model metrics (JSON), feature importance (CSV), demand analysis (JSON), comprehensive evaluation (Markdown)
+- Total model size: ~400 KB (lightweight for deployment)
 
 ---
 
 ## 🔮 Future Roadmap
 
-**Short-term Enhancements:**
-- Implement real-time traffic data integration using Google Maps Traffic API to replace static rush hour multipliers with dynamic traffic conditions
-- Add driver acceptance prediction to estimate likelihood of ride acceptance and adjust rankings accordingly
-- Develop A/B testing framework to compare pricing strategies and measure impact on rider satisfaction and driver earnings
+**Immediate Next Steps (Day 3-4):**
+- Implement FastAPI backend with `/ride/quote` and `/vehicles/update` endpoints
+- Integrate ETA and demand models into API layer
+- Develop vehicle ranking algorithm with user preference modes
+- Add request validation and error handling
 
-**Medium-term Improvements:**
-- Build interactive dashboard for monitoring model performance, demand patterns, and pricing effectiveness in production
-- Implement online learning pipeline to retrain models weekly with new ride data, adapting to changing traffic patterns and seasonal variations
-- Add multi-objective optimization for vehicle assignment that balances rider wait time, driver utilization, and total system efficiency
+**Short-term Enhancements (Week 2):**
+- Implement comprehensive unit tests for models and API endpoints
+- Add API documentation using OpenAPI/Swagger
+- Create deployment guide with Docker containerization
+- Conduct load testing to validate latency targets
 
-**Long-term Vision:**
-- Scale to multi-city deployment with city-specific models and pricing strategies
-- Integrate weather data and event calendars (concerts, sports games) for better demand forecasting
-- Develop reinforcement learning agent for dynamic driver repositioning to reduce pickup times in high-demand areas
+**Medium-term Improvements (Month 1-2):**
+- Enhance demand forecasting with time-series models (Prophet, SARIMA) for better future predictions
+- Implement real-time model updates as new ride data becomes available
+- Add driver acceptance prediction to improve matching efficiency
+- Develop A/B testing framework for pricing strategies
+
+**Long-term Vision (Month 3+):**
+- Integrate real-time traffic data from external APIs to improve ETA accuracy
+- Implement multi-objective optimization for vehicle-rider matching
+- Add explainability features (SHAP values) to justify pricing and ETA predictions to users
+- Scale to multi-city deployment with city-specific model fine-tuning
 
 ---
 
-**Technical Stack:** Python, LightGBM, scikit-learn, FastAPI, pandas, numpy  
-**Code Quality:** Modular architecture, comprehensive docstrings, reproducible (fixed random seed)  
-**Documentation:** 3 detailed reports (EDA, Model Evaluation, Learning Guides), production-ready README
+## 📝 Technical Skills Demonstrated
+
+This project showcases practical ML engineering skills relevant to production systems:
+
+- **Machine Learning:** Regression modeling, gradient boosting, model evaluation, feature engineering
+- **Data Engineering:** Synthetic data generation, geospatial analysis, temporal pattern simulation
+- **Software Engineering:** Modular code design, version control, documentation, reproducibility
+- **Domain Knowledge:** Understanding of ride-hailing business logic, pricing strategies, user experience optimization
+
+The implementation prioritizes simplicity and interpretability over complexity, using LightGBM (a proven solution for tabular data) rather than unnecessarily complex deep learning approaches. All design decisions are justified by metrics and aligned with real-world constraints.
 
 ---
 
-*This project demonstrates practical ML engineering skills: data generation, feature engineering, model selection, evaluation, and API deployment. The focus on interpretability, business logic, and real-world constraints reflects production-ready thinking rather than academic experimentation.*
+**Project Repository:** https://github.com/Karthiknayak26/AI_Vehicle_Matching.git  
+**Current Status:** Day 2 Complete – ML Models Trained and Evaluated  
+**Next Milestone:** API Development and Integration (Day 3-4)
