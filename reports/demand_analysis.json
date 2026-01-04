@@ -1,0 +1,21 @@
+{
+  "total_demand": 10000,
+  "avg_demand_per_slot": 16.67,
+  "peak_hours": [
+    13,
+    12,
+    17
+  ],
+  "high_demand_regions": [
+    "3_3",
+    "1_3",
+    "1_1",
+    "3_0",
+    "0_1"
+  ],
+  "surge_opportunities": {
+    "high_demand_slots": 24,
+    "total_slots": 600,
+    "percentage": 4.0
+  }
+}

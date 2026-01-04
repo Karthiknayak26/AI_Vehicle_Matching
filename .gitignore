@@ -32,19 +32,17 @@ wheels/
 # VS Code
 .vscode/
 
-# Data files (keep structure, ignore large files)
-# Exception: allow raw data files
-!data/raw/*.csv
-
+# Data files (keep structure, ignore large CSV files)
+# Allow specific CSV files in reports
 *.csv
-*.parquet
-*.pkl
-*.h5
+!reports/*.csv
 
-# Model files
-models/saved/*.pkl
-models/saved/*.joblib
-models/saved/*.h5
+# Allow model files in models/saved
+*.pkl
+!models/saved/*.pkl
+
+*.parquet
+*.h5
 
 # Logs
 *.log

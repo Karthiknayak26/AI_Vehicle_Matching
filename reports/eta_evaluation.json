@@ -1,0 +1,26 @@
+{
+  "linear_regression": {
+    "mae": 1.5301,
+    "rmse": 2.114,
+    "r2": 0.876,
+    "mape": 25.8159
+  },
+  "lightgbm": {
+    "mae": 0.7914,
+    "rmse": 1.1635,
+    "r2": 0.9624,
+    "mape": 8.8296
+  },
+  "feature_names": [
+    "trip_distance",
+    "hour",
+    "day_of_week",
+    "is_rush_hour",
+    "is_weekend",
+    "is_morning_rush",
+    "is_evening_rush",
+    "is_late_night",
+    "vehicle_encoded"
+  ],
+  "random_state": 42
+}
