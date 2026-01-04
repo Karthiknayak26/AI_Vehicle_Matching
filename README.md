@@ -24,18 +24,55 @@ This project implements an AI-driven vehicle matching and dynamic pricing system
 ## 📂 Project Structure
 
 ```
-ride-matching-mvp/
+AI_Vehicle_Matching/
 ├── data/
-│   ├── raw/              # Original datasets
-│   ├── processed/        # Cleaned data
-│   └── README.md         # Data documentation
+│   ├── raw/                    # Raw datasets
+│   │   └── rides.csv          # 10,000 synthetic rides
+│   ├── processed/              # Processed data & visualizations
+│   │   ├── duration_distribution.png
+│   │   ├── time_correlation.png
+│   │   ├── vehicle_comparison.png
+│   │   └── correlation_matrix.png
+│   └── README.md              # Data documentation
+│
+├── src/
+│   ├── features/              # Feature engineering modules
+│   │   ├── distance.py        # Haversine distance calculation
+│   │   ├── temporal.py        # Time-based features
+│   │   └── encoders.py        # Vehicle type encoding
+│   ├── models/                # Model implementations (planned)
+│   └── evaluation/            # Evaluation metrics
+│       └── metrics.py         # MAE, RMSE, R² calculations
+│
 ├── scripts/
-│   ├── generate_synthetic_data.py
-│   └── eda_analysis.py
-├── notebooks/            # Exploratory analysis
-├── requirements.txt
+│   ├── generate_synthetic_data.py  # Data generator
+│   ├── eda_analysis.py            # Exploratory analysis
+│   ├── train_eta_models.py        # ETA model training
+│   └── estimate_demand.py         # Demand estimation
+│
+├── models/saved/              # Trained models
+│   ├── eta_linear.pkl         # Linear Regression baseline
+│   ├── eta_lgbm.pkl          # LightGBM (production model)
+│   ├── feature_scaler.pkl    # Feature scaler
+│   └── demand_model.pkl      # Demand estimation model
+│
+├── reports/                   # Evaluation reports
+│   ├── MODEL_EVALUATION.md   # Comprehensive evaluation
+│   ├── eta_evaluation.json   # Model metrics
+│   ├── feature_importance.csv
+│   ├── demand_analysis.json
+│   └── demand_by_region_hour.csv
+│
+├── docs/                      # Documentation
+│   ├── DAY1_LEARNING_GUIDE.md
+│   └── DAY2_LEARNING_GUIDE.md
+│
+├── PROJECT_SUMMARY.md         # Project summary report
+├── PROJECT_THEORY.md          # Complete system theory
+├── requirements.txt           # Python dependencies
 └── README.md
 ```
+
 
 ## 🚀 Quick Start
 
@@ -61,6 +98,17 @@ python scripts/generate_synthetic_data.py
 ```bash
 python scripts/eda_analysis.py
 ```
+
+### Train ML Models
+
+```bash
+# Train ETA prediction models (Linear Regression + LightGBM)
+python scripts/train_eta_models.py
+
+# Estimate demand by region and time
+python scripts/estimate_demand.py
+```
+
 
 ## 📊 Dataset
 
