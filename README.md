@@ -9,9 +9,9 @@ This project implements an AI-driven vehicle matching and dynamic pricing system
 ## 🎯 Project Status
 
 - ✅ **Day 1**: Project setup and synthetic data generation (10,000 rides)
-- 🔄 **Day 2-3**: Model training (ETA, demand forecasting)
-- ⏳ **Day 4-5**: API development and integration
-- ⏳ **Day 6-7**: Testing and documentation
+- ✅ **Day 2**: ML model training (ETA: 96% accuracy, Demand estimation)
+- 🔄 **Day 3-4**: API development and integration
+- ⏳ **Day 5-6**: Testing and documentation
 
 ## 🛠️ Tech Stack
 
@@ -78,12 +78,20 @@ See `data/README.md` for detailed documentation.
 3. **Dynamic Pricing** - Calculate surge multipliers based on supply-demand
 4. **Vehicle Ranking** - Recommend top-k vehicles by rider preference
 
-## 📈 Key Metrics (Day 1)
+## 📈 Key Metrics
 
+**Dataset (Day 1):**
 - **Distance**: Mean 4.36 km, Range 0.5-11.46 km
 - **Duration**: Mean 9.39 min, Range 1.0-45.67 min
 - **Fare**: Mean $14.64, Range $2.57-$76.56
 - **Rush hour impact**: 60% longer trips during peak hours
+
+**ML Models (Day 2):**
+- **ETA Model (LightGBM)**: MAE 0.79 min, RMSE 1.16 min, R² 0.96
+- **Baseline (Linear Regression)**: MAE 1.53 min, R² 0.88
+- **Improvement**: 48% better than baseline
+- **Demand Model**: 25 regions, 600 time slots, 4% surge opportunities
+
 
 ## 📝 Assignment Compliance
 
@@ -91,11 +99,14 @@ See `data/README.md` for detailed documentation.
 ✅ Comprehensive EDA with visualizations  
 ✅ Clean, production-style code structure  
 ✅ Detailed documentation  
-⏳ ETA prediction model (upcoming)  
-⏳ Demand forecasting model (upcoming)  
+✅ ETA prediction model (LightGBM: 96% accuracy)  
+✅ Demand forecasting model (spatial + temporal)  
+✅ Feature engineering (Haversine, temporal, encoding)  
+✅ Model evaluation and comparison  
 ⏳ Dynamic pricing logic (upcoming)  
 ⏳ Vehicle ranking system (upcoming)  
-⏳ REST API (upcoming)  
+⏳ REST API (upcoming)
+  
 
 ## 📧 Contact
 
@@ -109,5 +120,6 @@ MIT
 
 ---
 
-**Last Updated:** January 3, 2026  
-**Status:** Day 1 Complete - Project Setup & Data Generation ✅
+**Last Updated:** January 4, 2026  
+**Status:** Day 2 Complete - ML Models Trained ✅
+
