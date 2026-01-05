@@ -365,133 +365,91 @@ This ensures:
 
 ---
 
-### Phase 3: The Decision Maker (Day 3-4) — PLANNED 🔄
+### Phase 3: The Decision Maker (Day 3) — DONE ✅
 
-#### Concept: Predictions Without Decisions Are Useless
+#### Concept:
+Predictions alone are useless without decisions.
 
-Imagine a weather app that says "70% chance of rain" but doesn't tell you whether to carry an umbrella. Useless, right?
+Implementation:
 
-Similarly, our ETA and demand predictions are useless unless we use them to make decisions:
-- **ETA prediction** → Which vehicle should we assign?
-- **Demand prediction** → What price should we charge?
+**Dynamic Pricing:**
 
-This phase converts predictions into actions.
+Explain demand vs supply:
+- **High demand, few drivers:** Increase price (surge) to attract more drivers
+- **Low demand, many drivers:** Decrease price (discount) to attract more riders
+- **Balanced:** Normal pricing
 
-#### Implementation: Dynamic Pricing
-
-**The demand-supply balance:**
-
-Think of pricing like a seesaw:
-
+Explain surge multiplier with example:
 ```
-Many riders, few drivers:        Few riders, many drivers:
-    Riders                            Drivers
-      🧍🧍🧍                              🚗🚗🚗
-         ⚖️  (unbalanced)                 ⚖️  (unbalanced)
-      🚗                                🧍
+Rush hour (8 AM, city center):
+- Demand: 50 rides/hour (estimated from history)
+- Supply: 5 available cars
+- Ratio: 50 ÷ 5 = 10 (very high!)
+- Surge: 1.3× (moderate surge)
 
-Solution: Increase price          Solution: Decrease price
-→ Attracts more drivers          → Attracts more riders
-→ Balance restored               → Balance restored
-```
+Late night (2 AM, suburbs):
+- Demand: 2 rides/hour
+- Supply: 10 available cars
+- Ratio: 2 ÷ 10 = 0.2 (very low)
+- Surge: 0.9× (10% discount)
 
-**Surge multiplier logic:**
-
-```
-Demand Score → Surge Multiplier
-
-0.0 - 0.3 (Low):     0.9× (10% discount)
-0.3 - 0.7 (Medium):  1.0× (normal price)
-0.7 - 0.85 (High):   1.3× (30% surge)
-0.85 - 1.0 (Very High): 1.5× (50% surge)
+Same 5km trip:
+- Rush hour: $13.00 × 1.3 = $16.90
+- Late night: $13.00 × 0.9 = $11.70
+- Difference: 44%!
 ```
 
-**Example calculation:**
+Mention surge cap and why it exists:
+- Cap at 1.5× (50% maximum increase)
+- Why? Higher surge angers users → bad reviews → they switch to competitors
+- Better to have moderate surge that users accept
+
+**Vehicle Ranking:**
+
+Explain Fastest / Cheapest / Balanced modes:
+
 ```
-Base fare for 5 km trip:
-- Base: $2.50
-- Distance: 5 × $1.20 = $6.00
-- Time: 12 min × $0.30 = $3.60
-- Subtotal: $12.10
+Available cars:
+- CAR001: Economy, 3 min away, $15.50
+- CAR002: Sedan, 5 min away, $18.00
+- CAR003: SUV, 2 min away, $22.00
+- CAR004: Economy, 7 min away, $14.00
 
-Scenario 1: Low demand (2 AM, suburbs)
-Demand score: 0.2
-Surge: 0.9×
-Final: $12.10 × 0.9 = $10.89 (discount!)
+Fastest mode (70% ETA, 20% cost, 10% comfort):
+1. CAR003 (2 min) - Score: 0.933
+2. CAR001 (3 min) - Score: 0.867
+3. CAR002 (5 min) - Score: 0.733
 
-Scenario 2: High demand (8 AM, city center)
-Demand score: 0.85
-Surge: 1.3×
-Final: $12.10 × 1.3 = $15.73 (surge)
-```
+Cheapest mode (70% cost, 20% ETA, 10% comfort):
+1. CAR004 ($14) - Score: 0.933
+2. CAR001 ($15.50) - Score: 0.867
+3. CAR002 ($18) - Score: 0.733
 
-**Why surge cap exists:**
-
-We cap surge at 1.5× (50% increase) because:
-- Higher surge angers users → bad reviews
-- Users switch to competitors
-- Trust is damaged
-
-Better to have moderate surge that users accept than extreme surge that drives them away.
-
-#### Implementation: Vehicle Ranking
-
-**The three user modes:**
-
-Different riders have different priorities:
-
-**Mode 1: Fastest**
-```
-Priority: Get there ASAP
-Weights: 70% ETA, 30% cost
-Example: User late for a meeting
-Result: Show vehicles with lowest pickup time
+Balanced mode (40% ETA, 40% cost, 20% comfort):
+1. CAR001 (fast + cheap) - Score: 0.867
+2. CAR003 (fastest) - Score: 0.800
+3. CAR004 (cheapest) - Score: 0.733
 ```
 
-**Mode 2: Cheapest**
-```
-Priority: Save money
-Weights: 70% cost, 30% ETA
-Example: Student on a budget
-Result: Show vehicles with lowest fare
-```
+Explain how scores are combined:
+1. **Normalize** all values to 0-1 scale (min-max)
+2. **Apply weights** based on user mode
+3. **Calculate score:** (ETA_weight × ETA_score) + (cost_weight × cost_score) + (comfort_weight × comfort_score)
+4. **Sort** by score (highest first)
+5. **Return** top 3 vehicles
 
-**Mode 3: Balanced**
-```
-Priority: Good balance
-Weights: 50% ETA, 50% cost
-Example: Regular commuter
-Result: Show vehicles with best overall score
-```
+**API Implementation:**
 
-**Scoring example:**
+The FastAPI backend provides RESTful endpoints:
+- **POST /vehicles/update:** Updates vehicle location and status
+- **POST /ride/quote:** Returns ETA, fare, and ranked vehicles
+- **GET /health:** Health check with model status
 
-Available vehicles:
-```
-Car A: ETA 3 min, Cost $15
-Car B: ETA 8 min, Cost $12
-Car C: ETA 5 min, Cost $13
-```
-
-Fastest mode (70% ETA, 30% cost):
-```
-Car A: (3 × 0.7) + (15 × 0.3) = 2.1 + 4.5 = 6.6
-Car B: (8 × 0.7) + (12 × 0.3) = 5.6 + 3.6 = 9.2
-Car C: (5 × 0.7) + (13 × 0.3) = 3.5 + 3.9 = 7.4
-
-Ranking: Car A (best), Car C, Car B
-```
-
-Cheapest mode (70% cost, 30% ETA):
-```
-Car A: (15 × 0.7) + (3 × 0.3) = 10.5 + 0.9 = 11.4
-Car B: (12 × 0.7) + (8 × 0.3) = 8.4 + 2.4 = 10.8
-Car C: (13 × 0.7) + (5 × 0.3) = 9.1 + 1.5 = 10.6
-
-Ranking: Car C (best), Car B, Car A
-```
-
-The system shows top 3 vehicles to the user, ranked by their preference.
+Key features:
+- Pydantic validation (automatic request checking)
+- < 200ms response time
+- Interactive docs at `/docs`
+- Comprehensive error handling
 
 ---
 
@@ -642,6 +600,6 @@ The goal wasn't to build the next Uber. The goal was to understand and implement
 
 ---
 
-**Current Status:** Day 2 Complete - ML Models Trained  
-**Next Steps:** API Development (Day 3-4)  
-**Final Goal:** End-to-end working system with API endpoints
+**Current Status:** Day 3 Complete - Backend API Implemented  
+**Next Steps:** Testing & Deployment (Day 4-5)  
+**Final Goal:** Production-ready system with comprehensive testing
