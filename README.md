@@ -10,16 +10,17 @@ This project implements an AI-driven vehicle matching and dynamic pricing system
 
 - ✅ **Day 1**: Project setup and synthetic data generation (10,000 rides)
 - ✅ **Day 2**: ML model training (ETA: 96% accuracy, Demand estimation)
-- 🔄 **Day 3-4**: API development and integration
-- ⏳ **Day 5-6**: Testing and documentation
+- ✅ **Day 3**: Backend API with dynamic pricing and vehicle ranking
+- 🔄 **Day 4-5**: Testing and deployment
+- ⏳ **Day 6-7**: Final documentation and optimization
 
 ## 🛠️ Tech Stack
 
 - **Python 3.8+**
-- **ML:** scikit-learn, LightGBM/XGBoost, Prophet
-- **Data:** pandas, numpy, geopandas, H3
-- **API:** FastAPI
-- **Testing:** pytest
+- **ML:** scikit-learn, LightGBM
+- **Data:** pandas, numpy
+- **API:** FastAPI, Pydantic, Uvicorn
+- **Testing:** pytest (planned)
 
 ## 📂 Project Structure
 
@@ -40,15 +41,22 @@ AI_Vehicle_Matching/
 │   │   ├── distance.py        # Haversine distance calculation
 │   │   ├── temporal.py        # Time-based features
 │   │   └── encoders.py        # Vehicle type encoding
-│   ├── models/                # Model implementations (planned)
+│   ├── pricing/               # Dynamic pricing module
+│   │   └── dynamic_pricing.py # Surge pricing logic
+│   ├── ranking/               # Vehicle ranking module
+│   │   └── vehicle_ranker.py  # Weighted scoring
 │   └── evaluation/            # Evaluation metrics
 │       └── metrics.py         # MAE, RMSE, R² calculations
+│
+├── api/                       # FastAPI application
+│   └── main.py               # REST API endpoints
 │
 ├── scripts/
 │   ├── generate_synthetic_data.py  # Data generator
 │   ├── eda_analysis.py            # Exploratory analysis
 │   ├── train_eta_models.py        # ETA model training
-│   └── estimate_demand.py         # Demand estimation
+│   ├── estimate_demand.py         # Demand estimation
+│   └── test_api.py               # API test suite
 │
 ├── models/saved/              # Trained models
 │   ├── eta_linear.pkl         # Linear Regression baseline
@@ -65,8 +73,10 @@ AI_Vehicle_Matching/
 │
 ├── docs/                      # Documentation
 │   ├── DAY1_LEARNING_GUIDE.md
-│   └── DAY2_LEARNING_GUIDE.md
+│   ├── DAY2_LEARNING_GUIDE.md
+│   └── API_DOCUMENTATION.md   # API endpoint docs
 │
+├── config.py                  # Configuration settings
 ├── PROJECT_SUMMARY.md         # Project summary report
 ├── PROJECT_THEORY.md          # Complete system theory
 ├── requirements.txt           # Python dependencies
@@ -109,6 +119,19 @@ python scripts/train_eta_models.py
 python scripts/estimate_demand.py
 ```
 
+### Run API Server
+
+```bash
+# Start FastAPI server
+uvicorn api.main:app --reload
+
+# Test API endpoints
+python scripts/test_api.py
+
+# Interactive API docs
+# Open browser: http://localhost:8000/docs
+```
+
 
 ## 📊 Dataset
 
@@ -121,10 +144,11 @@ See `data/README.md` for detailed documentation.
 
 ## 🎯 Core Features
 
-1. **ETA Prediction** - Predict pickup time and trip duration
-2. **Demand Forecasting** - Predict short-term demand per region
-3. **Dynamic Pricing** - Calculate surge multipliers based on supply-demand
-4. **Vehicle Ranking** - Recommend top-k vehicles by rider preference
+1. **ETA Prediction** - Predict pickup time and trip duration (96% accuracy)
+2. **Demand Forecasting** - Predict short-term demand per region (25 regions × 24 hours)
+3. **Dynamic Pricing** - Calculate surge multipliers based on supply-demand (0.9× to 1.5×)
+4. **Vehicle Ranking** - Recommend top-3 vehicles by rider preference (fastest/cheapest/balanced)
+5. **REST API** - FastAPI endpoints for vehicle updates and ride quotes
 
 ## 📈 Key Metrics
 
@@ -140,6 +164,13 @@ See `data/README.md` for detailed documentation.
 - **Improvement**: 48% better than baseline
 - **Demand Model**: 25 regions, 600 time slots, 4% surge opportunities
 
+**Backend API (Day 3):**
+- **Dynamic Pricing**: 22% price variation based on demand-supply ratio
+- **Surge Range**: 0.9× (discount) to 1.5× (high surge, capped)
+- **Vehicle Ranking**: Different rankings for 3 user modes
+- **API Response Time**: < 200ms (target met)
+- **Endpoints**: 2 POST endpoints with Pydantic validation
+
 
 ## 📝 Assignment Compliance
 
@@ -151,9 +182,13 @@ See `data/README.md` for detailed documentation.
 ✅ Demand forecasting model (spatial + temporal)  
 ✅ Feature engineering (Haversine, temporal, encoding)  
 ✅ Model evaluation and comparison  
-⏳ Dynamic pricing logic (upcoming)  
-⏳ Vehicle ranking system (upcoming)  
-⏳ REST API (upcoming)
+✅ Dynamic pricing logic (surge multipliers with fallback)  
+✅ Vehicle ranking system (weighted scoring, 3 user modes)  
+✅ REST API (FastAPI with 2 endpoints)  
+✅ Request validation (Pydantic schemas)  
+✅ API documentation (Swagger UI + manual docs)  
+⏳ Unit tests (upcoming)  
+⏳ Deployment guide (upcoming)
   
 
 ## 📧 Contact
@@ -166,8 +201,33 @@ For questions or feedback:
 
 MIT
 
+## 🚀 API Endpoints
+
+### POST /vehicles/update
+Update vehicle location and status
+```json
+{
+  "vehicle_id": "CAR001",
+  "location": {"lat": 40.75, "lon": -74.00},
+  "status": "available",
+  "vehicle_type": "economy"
+}
+```
+
+### POST /ride/quote
+Get ride quote with ranked vehicle recommendations
+```json
+{
+  "pickup": {"lat": 40.75, "lon": -74.00},
+  "drop": {"lat": 40.76, "lon": -73.99},
+  "user_mode": "fastest"
+}
+```
+
+**Interactive Docs:** http://localhost:8000/docs
+
 ---
 
-**Last Updated:** January 4, 2026  
-**Status:** Day 2 Complete - ML Models Trained ✅
+**Last Updated:** January 5, 2026  
+**Status:** Day 3 Complete - Backend API Implemented ✅
 
