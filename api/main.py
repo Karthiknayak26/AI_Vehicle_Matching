@@ -232,6 +232,8 @@ async def get_ride_quote(request: RideQuoteRequest):
     4. Rank vehicles by user preference
     5. Return top-k vehicles
     """
+    print(f"DEBUG: /ride/quote called with pickup={request.pickup}, drop={request.drop}, mode={request.user_mode}")
+    
     # Parse timestamp
     if request.timestamp:
         try:
@@ -278,8 +280,11 @@ async def get_ride_quote(request: RideQuoteRequest):
             1  # vehicle_encoded (economy as default for prediction)
         ]])
         
+        # Scale features before prediction (CRITICAL!)
+        features_scaled = scaler.transform(features)
+        
         # Predict duration
-        duration = eta_model.predict(features)[0]
+        duration = eta_model.predict(features_scaled)[0]
     else:
         # Fallback: simple estimation
         duration = distance / 0.5  # Assume 30 km/h average speed
