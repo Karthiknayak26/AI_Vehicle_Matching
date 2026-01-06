@@ -7,3 +7,5 @@ lightgbm>=4.0.0
 fastapi
 uvicorn[standard]
 pydantic
+pytest>=7.0.0
+httpx>=0.24.0
