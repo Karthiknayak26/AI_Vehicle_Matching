@@ -248,8 +248,18 @@ async def get_ride_quote(request: RideQuoteRequest):
     )
     
     # 2. Extract temporal features
-    temporal_features = extract_temporal_features(request_time)
-    hour = temporal_features['hour']
+    hour = request_time.hour
+    day_of_week = request_time.weekday()
+    day_of_month = request_time.day
+    month = request_time.month
+    
+    # Calculate temporal flags
+    is_rush_hour = 1 if (7 <= hour < 10) or (17 <= hour < 20) else 0
+    is_morning_rush = 1 if 7 <= hour < 10 else 0
+    is_evening_rush = 1 if 17 <= hour < 20 else 0
+    is_weekend = 1 if day_of_week >= 5 else 0
+    is_late_night = 1 if hour >= 23 or hour < 5 else 0
+
     
     # 3. Predict trip duration using ETA model
     if eta_model and scaler:
@@ -257,14 +267,14 @@ async def get_ride_quote(request: RideQuoteRequest):
         features = np.array([[
             distance,
             hour,
-            temporal_features['day_of_week'],
-            temporal_features['day_of_month'],
-            temporal_features['month'],
-            temporal_features['is_rush_hour'],
-            temporal_features['is_morning_rush'],
-            temporal_features['is_evening_rush'],
-            temporal_features['is_weekend'],
-            temporal_features['is_late_night'],
+            day_of_week,
+            day_of_month,
+            month,
+            is_rush_hour,
+            is_morning_rush,
+            is_evening_rush,
+            is_weekend,
+            is_late_night,
             1  # vehicle_encoded (economy as default for prediction)
         ]])
         
