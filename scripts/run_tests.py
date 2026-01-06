@@ -21,6 +21,22 @@ def run_all_tests():
     print("=" * 70)
     print()
     
+    # Check if pytest is installed
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pytest", "--version"],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            print("ERROR: pytest is not installed.")
+            print("Please install it with: pip install pytest httpx")
+            return {}, 0, 0
+    except Exception as e:
+        print(f"ERROR: Could not run pytest: {e}")
+        print("Please install pytest with: pip install pytest httpx")
+        return {}, 0, 0
+    
     test_files = [
         "tests/test_distance.py",
         "tests/test_pricing.py",
@@ -36,9 +52,9 @@ def run_all_tests():
         print(f"\nRunning {test_file}...")
         print("-" * 70)
         
-        # Run pytest with verbose output
+        # Run pytest with verbose output using python -m pytest
         result = subprocess.run(
-            ["pytest", test_file, "-v", "--tb=short"],
+            [sys.executable, "-m", "pytest", test_file, "-v", "--tb=short"],
             capture_output=True,
             text=True
         )
@@ -61,6 +77,7 @@ def run_all_tests():
         total_failed += failed
     
     return results, total_passed, total_failed
+
 
 
 def load_model_metrics():
