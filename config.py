@@ -113,13 +113,13 @@ GRID_SIZE = 5  # 5x5 grid = 25 regions
 
 import os
 
-# Get project root directory
-PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# Get the project root directory (where config.py is located)
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# Model file paths
+# Model paths (absolute paths from project root)
 ETA_MODEL_PATH = os.path.join(PROJECT_ROOT, 'models', 'saved', 'eta_lgbm.pkl')
-DEMAND_MODEL_PATH = os.path.join(PROJECT_ROOT, 'models', 'saved', 'demand_model.pkl')
 SCALER_PATH = os.path.join(PROJECT_ROOT, 'models', 'saved', 'feature_scaler.pkl')
+DEMAND_MODEL_PATH = os.path.join(PROJECT_ROOT, 'models', 'saved', 'demand_model.pkl')
 
 # ============================================================================
 # LOGGING CONFIGURATION
