@@ -289,24 +289,19 @@ async def get_ride_quote(request: RideQuoteRequest):
             hour,
             day_of_week,
             is_rush_hour,
+            is_weekend,         # Moved up
             is_morning_rush,
             is_evening_rush,
-            is_weekend,
             is_late_night,
-            1  # vehicle_encoded (economy as default for prediction)
+            1  # vehicle_encoded
         ]])
         
-        # Prepare features DataFrame to satisfy sklearn warning and ensure correct column mapping
-        # FIX: distance -> trip_distance
+        # Prepare features DataFrame
         feature_names = [
             'trip_distance', 'hour', 'day_of_week', 'is_rush_hour', 
-            'is_morning_rush', 'is_evening_rush', 'is_weekend', 
+            'is_weekend', 'is_morning_rush', 'is_evening_rush', 
             'is_late_night', 'vehicle_encoded'
         ]
-        
-        # DEBUG: Print expected features to fix mismatch once and for all
-        if hasattr(scaler, 'feature_names_in_'):
-            print(f"DEBUG: Scaler expects features: {list(scaler.feature_names_in_)}")
 
         
         try:
