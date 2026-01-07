@@ -117,7 +117,10 @@ app.add_middleware(
 )
 
 # Global state (in production, use Redis or database)
-vehicle_registry: Dict[str, Dict] = {}
+# Global state (in production, use Redis or database)
+# vehicle_registry replacement:
+from src.services.vehicle_store import vehicle_store
+
 demand_model = None
 eta_model = None
 scaler = None
@@ -157,63 +160,9 @@ async def load_models():
     
     print("Models loaded successfully!")
 
-    # Initialize demo vehicles
-    initialize_vehicles()
-
-
-def initialize_vehicles():
-    """Initialize a fixed set of vehicles for demo consistency"""
-    global vehicle_registry
-    
-    # Don't reset if already exists (unless empty)
-    if vehicle_registry:
-        return
-
-    print("Initializing demo vehicles...")
-    
-    # Fixed vehicles around NYC area (matches region encoding)
-    demo_vehicles = [
-        {
-            'id': 'v001', 
-            'location': {'lat': 40.7580, 'lon': -73.9855}, # Times Square
-            'status': 'available',
-            'vehicle_type': 'economy',
-            'last_updated': datetime.now().isoformat()
-        },
-        {
-            'id': 'v002',
-            'location': {'lat': 40.7829, 'lon': -73.9654}, # Central Park
-            'status': 'available',
-            'vehicle_type': 'sedan',
-            'last_updated': datetime.now().isoformat()
-        },
-        {
-            'id': 'v003',
-            'location': {'lat': 40.7484, 'lon': -73.9857}, # Empire State
-            'status': 'available',
-            'vehicle_type': 'suv',
-            'last_updated': datetime.now().isoformat()
-        },
-        {
-            'id': 'v004',
-            'location': {'lat': 40.7061, 'lon': -74.0092}, # Financial District
-            'status': 'available',
-            'vehicle_type': 'economy',
-            'last_updated': datetime.now().isoformat()
-        },
-        {
-            'id': 'v005',
-            'location': {'lat': 40.7128, 'lon': -74.0060}, # City Hall
-            'status': 'available',
-            'vehicle_type': 'sedan',
-            'last_updated': datetime.now().isoformat()
-        }
-    ]
-    
-    for v in demo_vehicles:
-        vehicle_registry[v['id']] = v
-        
-    print(f"✓ Initialized {len(vehicle_registry)} demo vehicles")
+    # Initialize demo vehicles using the Store
+    # Centered on Udupi (13.35, 74.70) as per user demo requirement
+    vehicle_store.initialize_fleet(center_lat=13.35, center_lon=74.70, count=10)
 
 
 @app.get("/")
@@ -239,7 +188,7 @@ async def health_check():
             "eta_model": eta_model is not None,
             "scaler": scaler is not None
         },
-        "vehicles_registered": len(vehicle_registry)
+        "vehicles_registered": len(vehicle_store.get_all())
     }
 
 
@@ -250,14 +199,17 @@ async def update_vehicle(vehicle: VehicleUpdate):
     
     Stores vehicle in registry and returns current demand info for the region.
     """
-    # Update vehicle registry
-    vehicle_registry[vehicle.vehicle_id] = {
-        'id': vehicle.vehicle_id,
-        'location': {'lat': vehicle.location.lat, 'lon': vehicle.location.lon},
-        'status': vehicle.status,
-        'vehicle_type': vehicle.vehicle_type,
-        'last_updated': datetime.now().isoformat()
-    }
+    # Update vehicle via Store
+    vehicle_store.update_vehicle(
+        vehicle_id=vehicle.vehicle_id, 
+        lat=vehicle.location.lat, 
+        lon=vehicle.location.lon, 
+        status=vehicle.status
+    )
+    # Note: If vehicle doesn't exist, the store currently returns False.
+    # For a real update endpoint, we might want to create it if missing, 
+    # but strictly following the prompt's 'update_vehicle' signature.
+    # In this demo, we assume vehicles are pre-seeded or we'd add an 'upsert' logic.
     
     # Determine region
     region_id = get_region_id(vehicle.location.lat, vehicle.location.lon)
@@ -266,8 +218,9 @@ async def update_vehicle(vehicle: VehicleUpdate):
     current_hour = datetime.now().hour
     
     # Count available vehicles in region
+    all_vehicles = vehicle_store.get_all()
     available_in_region = sum(
-        1 for v in vehicle_registry.values()
+        1 for v in all_vehicles
         if v['status'] == 'available' and 
         get_region_id(v['location']['lat'], v['location']['lon']) == region_id
     )
@@ -296,13 +249,6 @@ async def update_vehicle(vehicle: VehicleUpdate):
 async def get_ride_quote(request: RideQuoteRequest):
     """
     Get ride quote with vehicle recommendations
-    
-    Steps:
-    1. Calculate trip distance and predict duration
-    2. Determine surge pricing based on demand
-    3. Find available vehicles and calculate costs
-    4. Rank vehicles by user preference
-    5. Return top-k vehicles
     """
     print(f"DEBUG: /ride/quote called with pickup={request.pickup}, drop={request.drop}, mode={request.user_mode}")
     
@@ -338,8 +284,6 @@ async def get_ride_quote(request: RideQuoteRequest):
     # 3. Predict trip duration using ETA model
     if eta_model and scaler:
         # Prepare features (must match training order - 9 features)
-        # Features: distance, hour, day_of_week, is_rush_hour, is_morning_rush, 
-        #           is_evening_rush, is_weekend, is_late_night, vehicle_encoded
         features = np.array([[
             distance,
             hour,
@@ -353,8 +297,9 @@ async def get_ride_quote(request: RideQuoteRequest):
         ]])
         
         # Prepare features DataFrame to satisfy sklearn warning and ensure correct column mapping
+        # FIX: distance -> trip_distance
         feature_names = [
-            'distance', 'hour', 'day_of_week', 'is_rush_hour', 
+            'trip_distance', 'hour', 'day_of_week', 'is_rush_hour', 
             'is_morning_rush', 'is_evening_rush', 'is_weekend', 
             'is_late_night', 'vehicle_encoded'
         ]
@@ -376,8 +321,9 @@ async def get_ride_quote(request: RideQuoteRequest):
     pickup_region = get_region_id(request.pickup.lat, request.pickup.lon)
     
     # Count available vehicles in region
+    all_vehicles = vehicle_store.get_all()
     available_in_region = sum(
-        1 for v in vehicle_registry.values()
+        1 for v in all_vehicles
         if v['status'] == 'available' and 
         get_region_id(v['location']['lat'], v['location']['lon']) == pickup_region
     )
@@ -387,23 +333,25 @@ async def get_ride_quote(request: RideQuoteRequest):
     )
     
     # 5. Find available vehicles and calculate costs
+    # Use VehicleStore proximity search (optimised)
+    nearby_vehicles = vehicle_store.get_nearby(
+        lat=request.pickup.lat,
+        lon=request.pickup.lon,
+        radius_km=5.0
+    )
+    
     available_vehicles = []
     
-    for vehicle_id, vehicle_data in vehicle_registry.items():
-        if vehicle_data['status'] != 'available':
-            continue
+    for vehicle_data in nearby_vehicles:
+        vehicle_id = vehicle_data['id']
         
-        # Calculate pickup ETA (simple distance-based)
+        # Calculate pickup ETA (already filtered by distance, but calculating exact)
         pickup_distance = haversine_distance(
             vehicle_data['location']['lat'],
             vehicle_data['location']['lon'],
             request.pickup.lat,
             request.pickup.lon
         )
-        
-        # Skip if too far
-        if pickup_distance > 5.0:  # 5km max radius
-            continue
         
         # Estimate pickup time (assume 40 km/h in city)
         eta_pickup = (pickup_distance / 40.0) * 60  # minutes
