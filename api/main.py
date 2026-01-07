@@ -5,6 +5,7 @@ Provides REST API endpoints for vehicle updates and ride quotes.
 """
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 from datetime import datetime
@@ -89,10 +90,10 @@ class RideQuoteResponse(BaseModel):
 class VehicleUpdateResponse(BaseModel):
     """Vehicle update response"""
     vehicle_id: str
-    updated: bool
     region_id: str
-    nearby_requests: int
-    current_surge: float
+    current_demand: float
+    surge_multiplier: float
+    message: str
 
 
 # ============================================================================
@@ -103,6 +104,20 @@ app = FastAPI(
     title="AI Vehicle Matching API",
     description="Dynamic pricing and vehicle ranking for ride-hailing",
     version="1.0.0"
+)
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://127.0.0.1:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Global state (in production, use Redis or database)
@@ -211,12 +226,15 @@ async def update_vehicle(vehicle: VehicleUpdate):
     # Mock nearby requests (in production, query from database)
     nearby_requests = max(0, int(np.random.normal(5, 2)))
     
+    # Calculate current demand (mock - in production would be from database)
+    current_demand = min(1.0, max(0.1, nearby_requests / 10.0)) if demand_model else 0.5
+    
     return VehicleUpdateResponse(
         vehicle_id=vehicle.vehicle_id,
-        updated=True,
         region_id=region_id,
-        nearby_requests=nearby_requests,
-        current_surge=surge
+        current_demand=round(current_demand, 2),
+        surge_multiplier=round(surge, 1),
+        message="Vehicle updated successfully"
     )
 
 
@@ -265,13 +283,13 @@ async def get_ride_quote(request: RideQuoteRequest):
     
     # 3. Predict trip duration using ETA model
     if eta_model and scaler:
-        # Prepare features (must match training order)
+        # Prepare features (must match training order - 9 features)
+        # Features: distance, hour, day_of_week, is_rush_hour, is_morning_rush, 
+        #           is_evening_rush, is_weekend, is_late_night, vehicle_encoded
         features = np.array([[
             distance,
             hour,
             day_of_week,
-            day_of_month,
-            month,
             is_rush_hour,
             is_morning_rush,
             is_evening_rush,

@@ -207,9 +207,9 @@ def get_surge_with_fallback(
         return surge, reason
         
     except Exception as e:
-        # Complete fallback
+        # Complete fallback - use friendly message
         print(f"Error calculating surge: {e}. Using default.")
-        return default_surge, "Error - using default surge"
+        return default_surge, "Normal demand"
 
 
 def calculate_fare(
