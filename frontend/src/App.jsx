@@ -54,7 +54,7 @@ function App() {
             console.error('Error fetching vehicles:', error)
             // Fallback to idle state on error
             setState(AppStates.IDLE)
-            alert('Error fetching vehicles. Please make sure the API server is running.')
+            alert(error.message || 'Error fetching vehicles. Please make sure the API server is running.')
         }
     }
 

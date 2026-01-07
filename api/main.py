@@ -13,6 +13,7 @@ import pickle
 import numpy as np
 import os
 import sys
+import pandas as pd
 
 # Add project root to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -156,6 +157,64 @@ async def load_models():
     
     print("Models loaded successfully!")
 
+    # Initialize demo vehicles
+    initialize_vehicles()
+
+
+def initialize_vehicles():
+    """Initialize a fixed set of vehicles for demo consistency"""
+    global vehicle_registry
+    
+    # Don't reset if already exists (unless empty)
+    if vehicle_registry:
+        return
+
+    print("Initializing demo vehicles...")
+    
+    # Fixed vehicles around NYC area (matches region encoding)
+    demo_vehicles = [
+        {
+            'id': 'v001', 
+            'location': {'lat': 40.7580, 'lon': -73.9855}, # Times Square
+            'status': 'available',
+            'vehicle_type': 'economy',
+            'last_updated': datetime.now().isoformat()
+        },
+        {
+            'id': 'v002',
+            'location': {'lat': 40.7829, 'lon': -73.9654}, # Central Park
+            'status': 'available',
+            'vehicle_type': 'sedan',
+            'last_updated': datetime.now().isoformat()
+        },
+        {
+            'id': 'v003',
+            'location': {'lat': 40.7484, 'lon': -73.9857}, # Empire State
+            'status': 'available',
+            'vehicle_type': 'suv',
+            'last_updated': datetime.now().isoformat()
+        },
+        {
+            'id': 'v004',
+            'location': {'lat': 40.7061, 'lon': -74.0092}, # Financial District
+            'status': 'available',
+            'vehicle_type': 'economy',
+            'last_updated': datetime.now().isoformat()
+        },
+        {
+            'id': 'v005',
+            'location': {'lat': 40.7128, 'lon': -74.0060}, # City Hall
+            'status': 'available',
+            'vehicle_type': 'sedan',
+            'last_updated': datetime.now().isoformat()
+        }
+    ]
+    
+    for v in demo_vehicles:
+        vehicle_registry[v['id']] = v
+        
+    print(f"✓ Initialized {len(vehicle_registry)} demo vehicles")
+
 
 @app.get("/")
 async def root():
@@ -293,8 +352,19 @@ async def get_ride_quote(request: RideQuoteRequest):
             1  # vehicle_encoded (economy as default for prediction)
         ]])
         
-        # Scale features before prediction (CRITICAL!)
-        features_scaled = scaler.transform(features)
+        # Prepare features DataFrame to satisfy sklearn warning and ensure correct column mapping
+        feature_names = [
+            'distance', 'hour', 'day_of_week', 'is_rush_hour', 
+            'is_morning_rush', 'is_evening_rush', 'is_weekend', 
+            'is_late_night', 'vehicle_encoded'
+        ]
+        
+        try:
+            features_df = pd.DataFrame(features, columns=feature_names)
+            features_scaled = scaler.transform(features_df)
+        except Exception as e:
+            print(f"Warning: transformation failed with DataFrame ({e}), falling back to numpy array")
+            features_scaled = scaler.transform(features)
         
         # Predict duration
         duration = eta_model.predict(features_scaled)[0]

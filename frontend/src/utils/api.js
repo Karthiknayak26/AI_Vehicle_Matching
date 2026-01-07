@@ -3,6 +3,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 
 export async function fetchVehicles(pickup, drop, userMode = 'fastest') {
     try {
+        console.log(`Fetching vehicles from: ${API_BASE_URL}/ride/quote`);
         const response = await fetch(`${API_BASE_URL}/ride/quote`, {
             method: 'POST',
             headers: {
@@ -16,7 +17,21 @@ export async function fetchVehicles(pickup, drop, userMode = 'fastest') {
         })
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status}`)
+            // Try to read error details from body
+            let errorDetail = response.statusText;
+            try {
+                const errorData = await response.json();
+                errorDetail = errorData.detail || JSON.stringify(errorData);
+            } catch (e) {
+                // ignore
+            }
+
+            if (response.status === 404) {
+                throw new Error(`No vehicles found nearby (404). Details: ${errorDetail}`);
+            } else if (response.status === 500) {
+                throw new Error(`Server error (500). Please try again. Details: ${errorDetail}`);
+            }
+            throw new Error(`API Request Failed (${response.status}): ${errorDetail}`);
         }
 
         return await response.json()

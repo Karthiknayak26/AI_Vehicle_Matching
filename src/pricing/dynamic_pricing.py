@@ -95,11 +95,11 @@ def get_demand_score(
             return demand_data[fallback_key].get('demand_score', 0.5)
     
     # Fallback 2: Try same hour, city-wide average
-    hour_scores = [
-        data.get('demand_score', 0.5)
-        for (r, h), data in demand_data.items()
-        if h == hour
-    ]
+    hour_scores = []
+    for k, data in demand_data.items():
+        # Handle various key formats (region_id, hour, ...) or just (region_id, hour)
+        if hasattr(k, '__len__') and len(k) >= 2 and k[1] == hour:
+            hour_scores.append(data.get('demand_score', 0.5))
     if hour_scores:
         return np.mean(hour_scores)
     
