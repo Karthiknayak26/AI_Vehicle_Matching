@@ -162,7 +162,7 @@ async def load_models():
 
     # Initialize demo vehicles using the Store
     # Centered on Udupi (13.35, 74.70) as per user demo requirement
-    vehicle_store.initialize_fleet(center_lat=13.35, center_lon=74.70, count=10)
+    vehicle_store.initialize_fleet(center_lat=13.35, center_lon=74.70, count=20)
 
 
 @app.get("/")

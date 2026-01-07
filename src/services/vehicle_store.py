@@ -37,12 +37,22 @@ class VehicleStore:
         
         vehicle_types = ['economy', 'sedan', 'suv']  # Matches config.py
         
+        # Ensure at least one of each type exists close to center
+        # This guarantees variety even with small counts
+        forced_types = ['economy', 'sedan', 'suv', 'economy', 'sedan']
+        
         for i in range(count):
-            # Random distribution within ~3km (approx 0.03 degrees)
-            lat_offset = random.uniform(-0.03, 0.03)
-            lon_offset = random.uniform(-0.03, 0.03)
+            # Tighter distribution: ~800m radius (0.008 degrees)
+            # This ensures they ALWAYS show up in a 5km radius search
+            lat_offset = random.uniform(-0.008, 0.008)
+            lon_offset = random.uniform(-0.008, 0.008)
             
-            v_type = random.choice(vehicle_types)
+            # Use forced types for first few, then random
+            if i < len(forced_types):
+                v_type = forced_types[i]
+            else:
+                v_type = random.choice(vehicle_types)
+                
             v_id = f"v_{v_type}_{i}_{random.randint(1000,9999)}"
             
             self._vehicles[v_id] = {
