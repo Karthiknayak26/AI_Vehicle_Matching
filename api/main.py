@@ -304,6 +304,11 @@ async def get_ride_quote(request: RideQuoteRequest):
             'is_late_night', 'vehicle_encoded'
         ]
         
+        # DEBUG: Print expected features to fix mismatch once and for all
+        if hasattr(scaler, 'feature_names_in_'):
+            print(f"DEBUG: Scaler expects features: {list(scaler.feature_names_in_)}")
+
+        
         try:
             features_df = pd.DataFrame(features, columns=feature_names)
             features_scaled = scaler.transform(features_df)
