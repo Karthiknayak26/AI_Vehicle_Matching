@@ -88,7 +88,7 @@ USER_MODE_WEIGHTS = {
 # ============================================================================
 
 # Number of top vehicles to return
-TOP_K_VEHICLES = 3
+TOP_K_VEHICLES = 10
 
 # Maximum search radius for available vehicles (km)
 MAX_SEARCH_RADIUS_KM = 5.0
