@@ -5,7 +5,6 @@ import './RidePlanningCard.css'
 function RidePlanningCard({ onSearch }) {
     const [pickup, setPickup] = useState('')
     const [drop, setDrop] = useState('')
-    const [preference, setPreference] = useState('fastest')
     const locations = getLocationNames()
 
     const handleSubmit = (e) => {
@@ -21,7 +20,7 @@ function RidePlanningCard({ onSearch }) {
             return
         }
 
-        onSearch(pickup, drop, preference)
+        onSearch(pickup, drop, 'balanced')
     }
 
     return (
@@ -66,33 +65,6 @@ function RidePlanningCard({ onSearch }) {
                             <option key={loc} value={loc}>{loc}</option>
                         ))}
                     </select>
-                </div>
-
-                <div className="form-group">
-                    <label>Preference</label>
-                    <div className="preference-buttons">
-                        <button
-                            type="button"
-                            className={`preference-btn ${preference === 'fastest' ? 'active' : ''}`}
-                            onClick={() => setPreference('fastest')}
-                        >
-                            ⚡ Fastest
-                        </button>
-                        <button
-                            type="button"
-                            className={`preference-btn ${preference === 'cheapest' ? 'active' : ''}`}
-                            onClick={() => setPreference('cheapest')}
-                        >
-                            💰 Cheapest
-                        </button>
-                        <button
-                            type="button"
-                            className={`preference-btn ${preference === 'balanced' ? 'active' : ''}`}
-                            onClick={() => setPreference('balanced')}
-                        >
-                            ⚖️ Balanced
-                        </button>
-                    </div>
                 </div>
 
                 <button type="submit" className="search-button">

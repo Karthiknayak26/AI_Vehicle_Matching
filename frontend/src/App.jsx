@@ -24,7 +24,7 @@ function App() {
     const [theme, setTheme] = useState('dark')
     const [pickup, setPickup] = useState(null)
     const [drop, setDrop] = useState(null)
-    const [preference, setPreference] = useState('fastest')
+
     const [vehicles, setVehicles] = useState([])
     const [selectedVehicle, setSelectedVehicle] = useState(null)
     const [driver, setDriver] = useState(null)
@@ -38,7 +38,8 @@ function App() {
 
         setPickup(pickupCoords)
         setDrop(dropCoords)
-        setPreference(userPreference)
+
+        // setPreference(userPreference) - Removed for simplification
         setState(AppStates.SEARCHING)
 
         try {

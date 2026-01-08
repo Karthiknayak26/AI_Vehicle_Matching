@@ -34,6 +34,9 @@ To build a functional MVP within a constrained timeline, the following engineeri
 *   **Mock Geocoding**
     *   **Reasoning:** The frontend uses predefined coordinates for local landmarks (e.g., Manipal University, Malpe Beach) to simplify the demo flow.
     *   **Implementation:** `geocoding.js` in frontend.
+*   **Ranking Preference Default**
+    *   **Reasoning:** For demo simplicity, the frontend uses a default "Balanced" ranking strategy. The backend supports multiple modes (Fastest, Cheapest), but the UI is streamlined to a single "Get Ride" action.
+    *   **Implementation:** `frontend/src/utils/api.js`.
 
 ---
 

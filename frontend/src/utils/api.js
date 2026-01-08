@@ -1,7 +1,7 @@
 // Smart URL selection for deployment
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
-export async function fetchVehicles(pickup, drop, userMode = 'fastest') {
+export async function fetchVehicles(pickup, drop, userMode = 'balanced') {
     try {
         console.log(`Fetching vehicles from: ${API_BASE_URL}/ride/quote`);
         const response = await fetch(`${API_BASE_URL}/ride/quote`, {
