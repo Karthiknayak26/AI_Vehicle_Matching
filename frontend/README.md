@@ -14,40 +14,43 @@ This frontend demonstrates an end-to-end ride-hailing user journey with:
 
 ## 🚀 Features
 
-### **1. Interactive Welcome Experience**
-- **Cinematic Landing Page**: Full-screen glassmorphism design
-- **Particle System**: Interactive background with mouse tracking and 80+ floating particles
-- **Dynamic Visuals**: Animated gradient backgrounds and 3D floating elements
-- **Smooth Transitions**: Seamless flow into ride planning
-
-### **2. Premium Ride Planning Interface**
+### **1. Premium Ride Planning Interface**
 - Full-screen map background (Leaflet + OpenStreetMap)
-- **India Localization**: 15 custom landmarks in Udupi, Karnataka
-- **Floating UI**: Glassmorphism cards for ride search
+- Floating glassmorphism card for ride search
+- 15 predefined NYC locations
 - 3 user preference modes (Fastest, Cheapest, Balanced)
 
-### **3. AI Visual Feedback (Simulated)**
+### **2. AI Visual Feedback (Simulated)**
 - 3-step processing animation:
   - "Analyzing traffic patterns..."
   - "Predicting ETA with ML model..."
   - "Calculating optimal pricing..."
 - Progress bar with step completion indicators
 
-### **4. Vehicle Selection & Automation**
-- **Animated Map Markers**: Vehicles (🚗🚕🚙) move smoothly to pickup location
-- **Smart Ranking**: AI-driven vehicle suggestions
-- **Vehicle Cards**:
-  - Type (Economy/Sedan/SUV) and Model (Swift, City, Innova)
-  - Live ETA and fair price
+### **3. Traffic Route Visualization (Simulated)**
+- Route divided into 5 segments
+- Color-coded traffic intensity:
+  - 🟢 Green = Low traffic (40% probability)
+  - 🟡 Yellow = Medium traffic (35% probability)
+  - 🔴 Red = High traffic (25% probability)
+- Animated route markers
+
+### **4. Vehicle Selection & Booking**
+- Up to 3 ranked vehicle options
+- Vehicle cards showing:
+  - Type (Economy/Sedan/SUV)
+  - ETA pickup time
+  - Trip duration
+  - Price
   - AI score (star rating)
-- **Visual Feedback**: Selected vehicle bounces and highlights
+- Highlighted best recommendation
 - Detailed fare breakdown
 
-### **5. Confirmation Experience**
-- **Sidebar Layout**: details appear in a sleek left-side panel
-- **Local Context**: Indian driver names (e.g., Rajesh Kumar) and KA registration plates
-- **Live Updates**: Simulated driver tracking animation
-- **ETA Countdown**: Real-time arrival updates
+### **5. Confirmation Screen**
+- Mock driver details (name, vehicle, rating)
+- Live ETA countdown
+- Trip summary
+- Fare breakdown
 
 ---
 
@@ -58,8 +61,7 @@ This frontend demonstrates an end-to-end ride-hailing user journey with:
 | **Framework** | React 18 |
 | **Build Tool** | Vite 5 |
 | **Maps** | Leaflet 1.9 + OpenStreetMap |
-| **Animation** | CSS Keyframes + Canvas API (Particles) |
-| **Styling** | Vanilla CSS (Glassmorphism, Gradients) |
+| **Styling** | Vanilla CSS (CSS Variables) |
 | **Backend** | FastAPI (localhost:8000) |
 
 ---
@@ -72,13 +74,12 @@ frontend/
 │   └── index.html              # HTML entry point
 ├── src/
 │   ├── components/
-│   │   ├── WelcomePage.jsx     # Interactive landing page with particles
 │   │   ├── ThemeToggle.jsx     # Dark/light mode switcher
-│   │   ├── MapContainer.jsx    # Leaflet map with animated markers
+│   │   ├── MapContainer.jsx    # Leaflet map with markers & routes
 │   │   ├── RidePlanningCard.jsx # Ride search interface
 │   │   ├── AIProcessingOverlay.jsx # 3-step AI animation
 │   │   ├── VehicleResultsPanel.jsx # Vehicle cards display
-│   │   └── ConfirmationScreen.jsx  # Driver details sidebar
+│   │   └── ConfirmationScreen.jsx  # Driver & fare details
 │   ├── utils/
 │   │   ├── geocoding.js        # Mock geocoding (15 locations)
 │   │   ├── traffic.js          # Traffic simulation
