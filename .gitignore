@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 *.so
+node_modules/
 .Python
 env/
 venv/
@@ -53,3 +54,9 @@ Thumbs.db
 
 # Environment
 .env
+
+# Node.js
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
