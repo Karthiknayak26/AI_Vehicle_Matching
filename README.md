@@ -141,16 +141,4 @@ pytest tests/ -v
 *   **Advanced Forecasting:** Using Prophet or LSTM models for temporal demand forecasting.
 *   **Cloud Scaling:** Deploying the inference engine on Kubernetes for horizontal scaling.
 
-## 9. Demo Scenarios (Try It Live!)
 
-To see the dynamic system in action, try these specific locations:
-
-*   **⚡ High Demand Surge (1.4x):**
-    *   **Pickup:** `Manipal University`
-    *   **Reason:** Simulates a student rush hour scenario.
-*   **💰 Low Demand Discount (0.9x):**
-    *   **Pickup:** `Malpe Beach`
-    *   **Reason:** Simulates low foot traffic times (Promotion applied).
-*   **⚖️ Normal Pricing:**
-    *   **Pickup:** `Udupi Sri Krishna Temple`
-    *   **Reason:** Standard balanced market conditions.
