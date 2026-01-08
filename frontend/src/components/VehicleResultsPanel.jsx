@@ -28,7 +28,7 @@ function VehicleResultsPanel({ vehicles, quoteData, selectedVehicle, onSelect, o
                     ← Back
                 </button>
                 <div>
-                    <h2>Available Vehicles</h2>
+                    <h2>Showing best available vehicles</h2>
                     <p>{quoteData?.distance} km • {quoteData?.estimated_duration} min</p>
                 </div>
             </div>
