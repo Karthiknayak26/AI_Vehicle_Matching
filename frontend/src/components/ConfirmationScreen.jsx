@@ -79,7 +79,7 @@ function ConfirmationScreen({ vehicle, driver, quoteData, onReset }) {
                 </div>
                 <div className="fare-row">
                     <span>Surge ({vehicle.fare_breakdown.surge_multiplier}x)</span>
-                    <span>$0.00</span>
+                    <span>${(vehicle.final_fare - vehicle.fare_breakdown.subtotal).toFixed(2)}</span>
                 </div>
                 <div className="fare-total">
                     <span>Total</span>

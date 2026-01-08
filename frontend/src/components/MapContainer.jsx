@@ -11,13 +11,15 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-function MapContainer({ pickup, drop, showRoute, vehicles, animatingVehicle, selectedVehicle }) {
+function MapContainer({ pickup, drop, showRoute, vehicles, animatingVehicle, selectedVehicle, theme }) {
     const mapRef = useRef(null)
     const mapInstanceRef = useRef(null)
     const markersRef = useRef([])
     const routeLayersRef = useRef([])
     const vehicleMarkersRef = useRef([])
     const [vehiclePosition, setVehiclePosition] = useState(null)
+
+    const tileLayerRef = useRef(null)
 
     useEffect(() => {
         // Initialize map
@@ -28,14 +30,33 @@ function MapContainer({ pickup, drop, showRoute, vehicles, animatingVehicle, sel
                 zoomControl: true,
                 attributionControl: false
             })
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-            }).addTo(mapInstanceRef.current)
         }
 
+        // Handle Tile Layer Switching
+        if (tileLayerRef.current) {
+            tileLayerRef.current.remove()
+        }
+
+        const tileUrl = theme === 'dark'
+            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+            : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+
+        tileLayerRef.current = L.tileLayer(tileUrl, {
+            maxZoom: 19,
+            attribution: theme === 'dark'
+                ? '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                : '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(mapInstanceRef.current)
+
         return () => {
-            // Cleanup on unmount
+            // Cleanup on unmount is handled by the main generic cleanup if needed, 
+            // but here we just manage the tile layer.
+            // keeping the map instance alignment logic below separate
+        }
+    }, [theme])
+
+    useEffect(() => {
+        return () => {
             if (mapInstanceRef.current) {
                 mapInstanceRef.current.remove()
                 mapInstanceRef.current = null

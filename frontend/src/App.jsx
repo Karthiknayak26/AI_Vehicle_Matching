@@ -123,6 +123,7 @@ function App() {
                 vehicles={state === AppStates.RESULTS || state === AppStates.SELECTED || state === AppStates.CONFIRMED ? vehicles : null}
                 animatingVehicle={animatingVehicle}
                 selectedVehicle={selectedVehicle}
+                theme={theme}
             />
 
             {state === AppStates.IDLE && (

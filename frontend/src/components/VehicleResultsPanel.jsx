@@ -101,7 +101,9 @@ function VehicleResultsPanel({ vehicles, quoteData, selectedVehicle, onSelect, o
                         </div>
                         <div className="fare-item">
                             <span>Surge ({selectedVehicle.fare_breakdown.surge_multiplier}x)</span>
-                            <span>$0.00</span>
+                            <span>
+                                ${(selectedVehicle.final_fare - selectedVehicle.fare_breakdown.subtotal).toFixed(2)}
+                            </span>
                         </div>
                         <div className="fare-total">
                             <span>Total</span>
