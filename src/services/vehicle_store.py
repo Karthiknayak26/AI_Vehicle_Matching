@@ -42,10 +42,10 @@ class VehicleStore:
         forced_types = ['economy', 'sedan', 'suv', 'economy', 'sedan']
         
         for i in range(count):
-            # Tighter distribution: ~800m radius (0.008 degrees)
-            # This ensures they ALWAYS show up in a 5km radius search
-            lat_offset = random.uniform(-0.008, 0.008)
-            lon_offset = random.uniform(-0.008, 0.008)
+            # Wider distribution: ~12km radius (0.12 degrees)
+            # This ensures coverage for Manipal, Udupi, and Kaup
+            lat_offset = random.uniform(-0.12, 0.12)
+            lon_offset = random.uniform(-0.12, 0.12)
             
             # Use forced types for first few, then random
             if i < len(forced_types):

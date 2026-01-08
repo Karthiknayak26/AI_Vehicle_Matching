@@ -162,7 +162,7 @@ async def load_models():
 
     # Initialize demo vehicles using the Store
     # Centered on Udupi (13.35, 74.70) as per user demo requirement
-    vehicle_store.initialize_fleet(center_lat=13.35, center_lon=74.70, count=20)
+    vehicle_store.initialize_fleet(center_lat=13.35, center_lon=74.70, count=50)
 
 
 @app.get("/")
@@ -328,16 +328,32 @@ async def get_ride_quote(request: RideQuoteRequest):
         get_region_id(v['location']['lat'], v['location']['lon']) == pickup_region
     )
     
-    surge, surge_reason = get_surge_with_fallback(
-        pickup_region, hour, max(available_in_region, 1), demand_model
-    )
+    # DEMO HACK: Force specific pricing for demo locations
+    # "Manipal University" -> High Demand (Student Rush)
+    is_manipal = abs(request.pickup.lat - 13.3467) < 0.01 and abs(request.pickup.lon - 74.7926) < 0.01
+    # "Malpe Beach" -> Low Demand (Discount)
+    is_malpe = abs(request.pickup.lat - 13.3500) < 0.01 and abs(request.pickup.lon - 74.7042) < 0.01
+    
+    if is_manipal:
+        # Artificial high demand
+        surge = 1.4
+        surge_reason = "High Demand (Student Rush)"
+    elif is_malpe:
+        # Artificial discount
+        surge = 0.9
+        surge_reason = "Low Demand (Promotion)"
+    else:
+        # Standard logic
+        surge, surge_reason = get_surge_with_fallback(
+            pickup_region, hour, max(available_in_region, 1), demand_model
+        )
     
     # 5. Find available vehicles and calculate costs
     # Use VehicleStore proximity search (optimised)
     nearby_vehicles = vehicle_store.get_nearby(
         lat=request.pickup.lat,
         lon=request.pickup.lon,
-        radius_km=5.0
+        radius_km=15.0
     )
     
     available_vehicles = []
