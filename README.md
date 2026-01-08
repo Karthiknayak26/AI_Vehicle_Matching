@@ -34,9 +34,6 @@ To build a functional MVP within a constrained timeline, the following engineeri
 *   **Mock Geocoding**
     *   **Reasoning:** The frontend uses predefined coordinates for local landmarks (e.g., Manipal University, Malpe Beach) to simplify the demo flow.
     *   **Implementation:** `geocoding.js` in frontend.
-*   **Ranking Preference Default**
-    *   **Reasoning:** For demo simplicity, the frontend uses a default "Balanced" ranking strategy. The backend supports multiple modes (Fastest, Cheapest), but the UI is streamlined to a single "Get Ride" action.
-    *   **Implementation:** `frontend/src/utils/api.js`.
 
 ---
 
@@ -143,3 +140,17 @@ pytest tests/ -v
 *   **Persistent Database:** Storing ride history in PostgreSQL for long-term analytics.
 *   **Advanced Forecasting:** Using Prophet or LSTM models for temporal demand forecasting.
 *   **Cloud Scaling:** Deploying the inference engine on Kubernetes for horizontal scaling.
+
+## 9. Demo Scenarios (Try It Live!)
+
+To see the dynamic system in action, try these specific locations:
+
+*   **⚡ High Demand Surge (1.4x):**
+    *   **Pickup:** `Manipal University`
+    *   **Reason:** Simulates a student rush hour scenario.
+*   **💰 Low Demand Discount (0.9x):**
+    *   **Pickup:** `Malpe Beach`
+    *   **Reason:** Simulates low foot traffic times (Promotion applied).
+*   **⚖️ Normal Pricing:**
+    *   **Pickup:** `Udupi Sri Krishna Temple`
+    *   **Reason:** Standard balanced market conditions.
