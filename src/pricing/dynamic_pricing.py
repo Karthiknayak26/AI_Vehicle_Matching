@@ -21,7 +21,12 @@ from config import (
     DEFAULT_SURGE,
     SURGE_THRESHOLDS,
     SURGE_MULTIPLIERS,
-    DEMAND_MODEL_PATH
+    DEMAND_MODEL_PATH,
+    CITY_MIN_LAT,
+    CITY_MAX_LAT,
+    CITY_MIN_LON,
+    CITY_MAX_LON,
+    GRID_SIZE
 )
 
 
@@ -29,28 +34,35 @@ def load_demand_model():
     """Load the demand estimation model"""
     try:
         with open(DEMAND_MODEL_PATH, 'rb') as f:
-            demand_data = pickle.load(f)
-        return demand_data
+            data = pickle.load(f)
+            
+        # Handle nested list structure (new format)
+        if isinstance(data, dict) and 'demand_data' in data:
+            raw_list = data['demand_data']
+            # Convert list to dict keyed by region_id (model appears to be time-agnostic)
+            return {item['region_id']: item for item in raw_list}
+            
+        return data
     except FileNotFoundError:
         print(f"Warning: Demand model not found at {DEMAND_MODEL_PATH}")
         return None
 
 
-def get_region_id(lat: float, lon: float, grid_size: int = 5) -> str:
+def get_region_id(lat: float, lon: float, grid_size: int = GRID_SIZE) -> str:
     """
     Convert lat/lon to region ID
     
     Args:
         lat: Latitude
         lon: Longitude
-        grid_size: Grid size (default 5x5)
+        grid_size: Grid size (default from config)
     
     Returns:
         str: Region ID (e.g., "2_3")
     """
-    # City bounds (must match training data)
-    min_lat, max_lat = 40.7000, 40.8000
-    min_lon, max_lon = -74.0200, -73.9200
+    # City bounds from config
+    min_lat, max_lat = CITY_MIN_LAT, CITY_MAX_LAT
+    min_lon, max_lon = CITY_MIN_LON, CITY_MAX_LON
     
     # Calculate grid indices
     lat_idx = int((lat - min_lat) / (max_lat - min_lat) * grid_size)
@@ -82,28 +94,15 @@ def get_demand_score(
     if demand_data is None:
         return 0.5  # Default to medium demand
     
-    # Look up demand score
-    key = (region_id, hour)
-    if key in demand_data:
-        return demand_data[key].get('demand_score', 0.5)
+    # Strategy 1: Look up by (region_id, hour) - Legacy format
+    if (region_id, hour) in demand_data:
+        return demand_data[(region_id, hour)].get('demand_score', 0.5)
+        
+    # Strategy 2: Look up by region_id only - New static format
+    if region_id in demand_data:
+        return demand_data[region_id].get('demand_score', 0.5)
     
-    # Fallback 1: Try same region, nearest hour
-    for hour_offset in [1, -1, 2, -2]:
-        fallback_hour = (hour + hour_offset) % 24
-        fallback_key = (region_id, fallback_hour)
-        if fallback_key in demand_data:
-            return demand_data[fallback_key].get('demand_score', 0.5)
-    
-    # Fallback 2: Try same hour, city-wide average
-    hour_scores = []
-    for k, data in demand_data.items():
-        # Handle various key formats (region_id, hour, ...) or just (region_id, hour)
-        if hasattr(k, '__len__') and len(k) >= 2 and k[1] == hour:
-            hour_scores.append(data.get('demand_score', 0.5))
-    if hour_scores:
-        return np.mean(hour_scores)
-    
-    # Fallback 3: Return default
+    # Fallback: Return default
     return 0.5
 
 
