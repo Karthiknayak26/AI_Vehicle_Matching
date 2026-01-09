@@ -1,15 +1,15 @@
 {
   "linear_regression": {
-    "mae": 1.5301,
-    "rmse": 2.114,
-    "r2": 0.876,
-    "mape": 25.8159
+    "mae": 2.8492,
+    "rmse": 4.1812,
+    "r2": 0.8751,
+    "mape": 36.659
   },
   "lightgbm": {
-    "mae": 0.7914,
-    "rmse": 1.1635,
-    "r2": 0.9624,
-    "mape": 8.8296
+    "mae": 1.2259,
+    "rmse": 1.941,
+    "r2": 0.9731,
+    "mape": 9.0247
   },
   "feature_names": [
     "trip_distance",

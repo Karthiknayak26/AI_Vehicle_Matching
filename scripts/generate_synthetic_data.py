@@ -22,20 +22,23 @@ class MetroCityGrid:
     """Defines a generic metro city grid (10km x 10km)"""
     
     def __init__(self):
-        # City center coordinates (generic)
-        self.center_lat = 40.7128
-        self.center_lon = -74.0060
+        # City center coordinates (Udupi/Manipal region)
+        # Manipal University as center
+        self.center_lat = 13.3409
+        self.center_lon = 74.7421
         
         # Grid boundaries (±5km from center)
+        # Lat: 13.29 to 13.39
+        # Lon: 74.69 to 74.79
         self.lat_range = (self.center_lat - 0.045, self.center_lat + 0.045)
         self.lon_range = (self.center_lon - 0.045, self.center_lon + 0.045)
         
-        # High-demand zones (business districts, airports, etc.)
+        # High-demand zones (Actual Udupi Hotspots)
         self.hotspots = [
-            (self.center_lat + 0.020, self.center_lon + 0.015),  # Business district
-            (self.center_lat - 0.025, self.center_lon - 0.020),  # Airport area
-            (self.center_lat + 0.010, self.center_lon - 0.030),  # Shopping area
-            (self.center_lat - 0.015, self.center_lon + 0.025),  # Residential hub
+            (13.3525, 74.7928),  # Manipal University (Student Hub)
+            (13.3419, 74.7473),  # Udupi City Bus Stand (Transit Hub)
+            (13.3500, 74.7042),  # Malpe Beach (Tourist Spot)
+            (13.2185, 74.7431),  # Kapu Beach (Tourist Spot - slightly far but included)
         ]
     
     def random_location(self, hotspot_prob=0.3):

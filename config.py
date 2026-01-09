@@ -7,24 +7,25 @@ Configuration for AI Vehicle Matching System
 # ============================================================================
 
 # Base fares by vehicle type (USD)
+# Base fares by vehicle type (INR)
 VEHICLE_BASE_FARES = {
-    'economy': 2.50,
-    'sedan': 3.50,
-    'suv': 5.00
+    'economy': 30.0,  # Auto Start
+    'sedan': 50.0,    # Taxi Base
+    'suv': 80.0       # Innova Base
 }
 
-# Price per kilometer by vehicle type (USD/km)
+# Price per kilometer by vehicle type (INR/km)
 PRICE_PER_KM = {
-    'economy': 1.20,
-    'sedan': 1.50,
-    'suv': 2.00
+    'economy': 15.0,  # Auto standard
+    'sedan': 18.0,
+    'suv': 25.0
 }
 
-# Price per minute by vehicle type (USD/min)
+# Price per minute by vehicle type (INR/min)
 PRICE_PER_MIN = {
-    'economy': 0.30,
-    'sedan': 0.40,
-    'suv': 0.50
+    'economy': 2.0,
+    'sedan': 3.0,
+    'suv': 5.0
 }
 
 # ============================================================================
@@ -100,11 +101,11 @@ API_TIMEOUT_SECONDS = 10.0
 # SPATIAL CONFIGURATION
 # ============================================================================
 
-# City grid configuration (must match demand model)
-CITY_MIN_LAT = 40.7000
-CITY_MAX_LAT = 40.8000
-CITY_MIN_LON = -74.0200
-CITY_MAX_LON = -73.9200
+# City grid configuration (Udupi/Manipal)
+CITY_MIN_LAT = 13.2900
+CITY_MAX_LAT = 13.3900
+CITY_MIN_LON = 74.6900
+CITY_MAX_LON = 74.7900
 GRID_SIZE = 5  # 5x5 grid = 25 regions
 
 # ============================================================================

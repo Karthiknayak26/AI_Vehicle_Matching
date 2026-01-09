@@ -24,43 +24,45 @@ class VehicleStore:
             cls._instance._initialized = False
         return cls._instance
 
-    def initialize_fleet(self, center_lat: float, center_lon: float, count: int = 10):
+    def initialize_fleet(self, center_lat: float = 13.34, center_lon: float = 74.74, count: int = 20):
         """
-        Pre-populates the store with vehicles around a specific location.
+        Pre-populates the store with vehicles around Udupi/Manipal.
         CRITICAL: Running this on startup prevents the "0 vehicles available" bug.
         """
+        import random
+        
+        # Udupi/Manipal Center (Hardcoded for safety to match Dataset)
+        base_lat = 13.3525
+        base_lon = 74.7928
+
         if self._initialized and self._vehicles:
             print(f"VehicleStore: Already initialized with {len(self._vehicles)} vehicles.")
             return
 
-        print(f"VehicleStore: Initializing fleet of {count} vehicles around ({center_lat}, {center_lon})...")
-        
-        vehicle_types = ['economy', 'sedan', 'suv']  # Matches config.py
-        
-        # Ensure at least one of each type exists close to center
-        # This guarantees variety even with small counts
-        forced_types = ['economy', 'sedan', 'suv', 'economy', 'sedan']
-        
+        print(f"VehicleStore: Initializing fleet of {count} vehicles around ({base_lat}, {base_lon})...")
+
         for i in range(count):
-            # Wider distribution: ~12km radius (0.12 degrees)
-            # This ensures coverage for Manipal, Udupi, and Kaup
-            lat_offset = random.uniform(-0.12, 0.12)
-            lon_offset = random.uniform(-0.12, 0.12)
+            vehicle_id = f"v_{i}_{random.randint(1000,9999)}" # Ensure unique ID
             
-            # Use forced types for first few, then random
-            if i < len(forced_types):
-                v_type = forced_types[i]
+            # Random position within ~5km (approx 0.05 degrees lat/lon)
+            lat = base_lat + random.uniform(-0.05, 0.05)
+            lon = base_lon + random.uniform(-0.05, 0.05)
+            
+            # Weighted vehicle types mimicking India
+            rand_val = random.random()
+            if rand_val < 0.5:
+                v_type = 'economy'  # Auto Rickshaw / Small Car
+            elif rand_val < 0.8:
+                v_type = 'sedan'    # Taxi
             else:
-                v_type = random.choice(vehicle_types)
+                v_type = 'suv'      # Innova etc
                 
-            v_id = f"v_{v_type}_{i}_{random.randint(1000,9999)}"
-            
-            self._vehicles[v_id] = {
-                'id': v_id,
+            self._vehicles[vehicle_id] = {
+                'id': vehicle_id,
                 'vehicle_type': v_type,
                 'location': {
-                    'lat': center_lat + lat_offset,
-                    'lon': center_lon + lon_offset
+                    'lat': lat,
+                    'lon': lon
                 },
                 'status': 'available',
                 'last_updated': datetime.now().isoformat(),
